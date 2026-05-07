@@ -50,7 +50,7 @@ fi
 
 echo "Installed linn files under: $LINN_HOME"
 echo "1) Open a new shell (or run: source \"$ZSHRC\")."
-echo "2) Create managed env with uv: linn jordy setup"
+echo "2) Create managed env with uv: linn jordy init"
 echo "   (creates $LINN_HOME/jordy)"
 echo "3) Or register existing venv: linn jordy /Users/ekimsen/Library/CloudStorage/Dropbox/project/jordy/.venv"
 echo "4) Activate it: linn jordy activate"

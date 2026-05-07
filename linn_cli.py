@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Per-environment Python venv registry and setup tool."""
+"""Per-environment Python venv registry and initialization tool."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from pathlib import Path
 
 USAGE = """Usage:
   linn <name> <path_to_venv>
-  linn <name> setup
+  linn <name> init
   linn <name> activate
   linn make pdf
   linn list
@@ -95,7 +95,7 @@ def register(name: str, raw_path: str) -> int:
     return 0
 
 
-def setup(name: str) -> int:
+def init(name: str) -> int:
     try:
         validate_name(name)
     except ValueError as exc:
@@ -128,7 +128,7 @@ def activation_script(name: str) -> int:
 
     venv_path = read_mapping(name)
     if venv_path is None:
-        print(f"Error: '{name}' is not registered. Run `linn {name} setup` first.", file=sys.stderr)
+        print(f"Error: '{name}' is not registered. Run `linn {name} init` first.", file=sys.stderr)
         return 1
 
     try:
@@ -277,8 +277,8 @@ def main(argv: list[str]) -> int:
     if len(argv) == 3 and argv[1] == "remove":
         return remove_env(argv[2])
 
-    if len(argv) == 3 and argv[2] == "setup":
-        return setup(argv[1])
+    if len(argv) == 3 and argv[2] == "init":
+        return init(argv[1])
 
     if len(argv) == 3 and argv[2] == "activate":
         return activation_script(argv[1])
