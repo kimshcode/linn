@@ -15,12 +15,20 @@ USAGE = """Usage:
   linn <name> <path_to_venv>
   linn <name> setup
   linn <name> activate
+  linn make pdf
   linn list
   linn remove <name>
 """
 
 NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 VENV_PATH_FILE = "venv_path.txt"
+LATEX_ARTIFACT_SUFFIXES = (
+    ".aux",
+    ".bbl",
+    ".blg",
+    ".log",
+    ".out",
+)
 
 
 def linn_home() -> Path:
@@ -183,7 +191,86 @@ def remove_env(name: str) -> int:
     return 0
 
 
+def pdf_output_name(tex_path: Path) -> str:
+    stem = tex_path.stem
+    if stem.startswith("00_"):
+        stem = f"zz_{stem[3:]}"
+    return f"{stem}.pdf"
+
+
+def run_build_step(args: list[str], cwd: Path) -> None:
+    subprocess.run(args, cwd=cwd, check=True)
+
+
+def cleanup_latex_artifacts(directory: Path, base: str) -> None:
+    for suffix in LATEX_ARTIFACT_SUFFIXES:
+        artifact = directory / f"{base}{suffix}"
+        try:
+            artifact.unlink()
+        except FileNotFoundError:
+            pass
+
+
+def tex_uses_bibtex(aux_path: Path) -> bool:
+    try:
+        return "\\bibdata" in aux_path.read_text(encoding="utf-8", errors="ignore")
+    except FileNotFoundError:
+        return False
+
+
+def build_pdf(tex_path: Path) -> None:
+    directory = tex_path.parent
+    tex_name = tex_path.name
+    base = tex_path.stem
+
+    run_build_step(
+        ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", tex_name],
+        directory,
+    )
+    if tex_uses_bibtex(directory / f"{base}.aux"):
+        run_build_step(["bibtex", base], directory)
+    run_build_step(
+        ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", tex_name],
+        directory,
+    )
+    run_build_step(
+        ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", tex_name],
+        directory,
+    )
+
+    source_pdf = directory / f"{base}.pdf"
+    target_pdf = directory / pdf_output_name(tex_path)
+    if source_pdf != target_pdf:
+        source_pdf.replace(target_pdf)
+
+    cleanup_latex_artifacts(directory, base)
+
+
+def make_pdf() -> int:
+    tex_files = sorted(Path.cwd().glob("*.tex"), key=lambda path: path.name)
+    if not tex_files:
+        print("Error: no TeX files found in the current directory.", file=sys.stderr)
+        return 1
+
+    try:
+        for tex_path in tex_files:
+            print(f"Building {tex_path.name} -> {pdf_output_name(tex_path)}")
+            build_pdf(tex_path)
+    except FileNotFoundError as exc:
+        command = exc.filename or "required command"
+        print(f"Error: '{command}' command not found.", file=sys.stderr)
+        return 1
+    except subprocess.CalledProcessError as exc:
+        print(f"Error: build failed with exit code {exc.returncode}.", file=sys.stderr)
+        return 1
+
+    return 0
+
+
 def main(argv: list[str]) -> int:
+    if len(argv) == 3 and argv[1] == "make" and argv[2] == "pdf":
+        return make_pdf()
+
     if len(argv) == 2 and argv[1] == "list":
         return list_envs()
 
