@@ -16,6 +16,7 @@ USAGE = """Usage:
   linn <name> init
   linn <name> activate
   linn make pdf
+  linn make key
   linn list
   linn remove <name>
 """
@@ -267,9 +268,55 @@ def make_pdf() -> int:
     return 0
 
 
+def make_key() -> int:
+    ssh_dir = Path.home() / ".ssh"
+    private_key = ssh_dir / "id_ed25519"
+    public_key = ssh_dir / "id_ed25519.pub"
+
+    if private_key.exists() or public_key.exists():
+        print(
+            f"Error: SSH key already exists at {private_key} or {public_key}.",
+            file=sys.stderr,
+        )
+        return 1
+
+    try:
+        ssh_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+        ssh_dir.chmod(0o700)
+        subprocess.run(
+            [
+                "ssh-keygen",
+                "-t",
+                "ed25519",
+                "-f",
+                str(private_key),
+                "-C",
+                "linn make key",
+                "-N",
+                "",
+            ],
+            check=True,
+        )
+        private_key.chmod(0o600)
+        public_key.chmod(0o644)
+    except FileNotFoundError:
+        print("Error: 'ssh-keygen' command not found.", file=sys.stderr)
+        return 1
+    except subprocess.CalledProcessError as exc:
+        print(f"Error: ssh-keygen failed with exit code {exc.returncode}.", file=sys.stderr)
+        return 1
+
+    print(f"Created SSH key: {private_key}")
+    print(f"Created SSH public key: {public_key}")
+    return 0
+
+
 def main(argv: list[str]) -> int:
     if len(argv) == 3 and argv[1] == "make" and argv[2] == "pdf":
         return make_pdf()
+
+    if len(argv) == 3 and argv[1] == "make" and argv[2] == "key":
+        return make_key()
 
     if len(argv) == 2 and argv[1] == "list":
         return list_envs()
