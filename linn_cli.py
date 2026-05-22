@@ -16,6 +16,7 @@ USAGE = """Usage:
   linn <name> init
   linn <name> activate
   linn make pdf
+  linn setup venv
   linn setup key
   linn setup gpg
   linn list
@@ -120,6 +121,22 @@ def init(name: str) -> int:
 
     store_mapping(name, target.resolve())
     print(f"Created environment '{name}' at {target}")
+    return 0
+
+
+def setup_venv() -> int:
+    target = Path.cwd() / ".venv"
+
+    try:
+        subprocess.run(["uv", "venv", str(target)], check=True)
+    except FileNotFoundError:
+        print("Error: 'uv' command not found. Install uv first.", file=sys.stderr)
+        return 1
+    except subprocess.CalledProcessError as exc:
+        print(f"Error: uv failed with exit code {exc.returncode}.", file=sys.stderr)
+        return 1
+
+    print(f"Created virtual environment at {target}")
     return 0
 
 
@@ -549,6 +566,9 @@ def setup_gpg() -> int:
 def main(argv: list[str]) -> int:
     if len(argv) == 3 and argv[1] == "make" and argv[2] == "pdf":
         return make_pdf()
+
+    if len(argv) == 3 and argv[1] == "setup" and argv[2] == "venv":
+        return setup_venv()
 
     if len(argv) == 3 and argv[1] == "setup" and argv[2] == "key":
         return setup_key()

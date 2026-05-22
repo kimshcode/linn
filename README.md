@@ -25,6 +25,7 @@ linn jordy init
 linn jordy activate
 cd /path/to/tex/files
 linn make pdf
+linn setup venv
 linn setup key
 linn setup gpg
 ```
@@ -35,6 +36,7 @@ linn setup gpg
 - `linn <name> <path_to_venv>`: register an existing venv path under a name.
 - `linn <name> activate`: resolve the activation script path for the name.
 - `linn make pdf`: build every `*.tex` file in the current directory into a PDF.
+- `linn setup venv`: create `.venv` in the current directory with `uv`.
 - `linn setup key`: create an Ed25519 SSH key at `~/.ssh/id_ed25519`.
 - `linn setup gpg`: configure GPG commit and tag signing for Git.
 - `linn list`: list registered names and paths.
@@ -52,6 +54,14 @@ are renamed to start with `zz_`, so `00_paper.tex` builds to `zz_paper.pdf`.
 
 LaTeX helper files such as `.aux`, `.bbl`, `.blg`, `.log`, and `.out` are
 removed after each successful build.
+
+### `linn setup venv`
+
+Create a `.venv` directory in the current directory with:
+
+```bash
+uv venv .venv
+```
 
 ### `linn setup key`
 
