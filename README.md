@@ -69,7 +69,7 @@ Create an Ed25519 SSH key pair in `~/.ssh`:
 
 - Private key: `~/.ssh/id_ed25519`
 - Public key: `~/.ssh/id_ed25519.pub`
-- Key comment: `linn setup key`
+- Prompts for an email address and uses it as the key comment
 - Private key permissions: `600`
 - Public key permissions: `644`
 

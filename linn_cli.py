@@ -326,6 +326,11 @@ def setup_key() -> int:
         )
         return 1
 
+    email = prompt("Email address (for the SSH key comment): ").strip()
+    if not email:
+        print("Error: email address is required.", file=sys.stderr)
+        return 1
+
     try:
         ssh_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
         ssh_dir.chmod(0o700)
@@ -337,7 +342,7 @@ def setup_key() -> int:
                 "-f",
                 str(private_key),
                 "-C",
-                "linn setup key",
+                email,
                 "-N",
                 "",
             ],
